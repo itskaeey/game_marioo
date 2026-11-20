@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HTML Quest - Petualangan Belajar HTML</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Pixel Art Style -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .pixel-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        /* Custom scrollbar for popup */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-white overflow-hidden h-screen w-screen flex flex-col justify-between items-center">
+
+    <!-- Top UI Header Bar -->
+    <header class="w-full bg-gray-900 border-b-4 border-yellow-500 px-4 py-2 flex justify-between items-center z-10 shadow-lg">
+        <div class="flex items-center space-x-4">
+            <div class="flex flex-col">
+                <span class="text-xs text-yellow-400 font-bold uppercase tracking-wider">Pemain</span>
+                <span class="pixel-font text-sm text-yellow-300">MARIO CODE</span>
+            </div>
+            <div class="h-8 w-0.5 bg-gray-700"></div>
+            <div class="flex flex-col">
+                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Level Aktif</span>
+                <span id="level-title" class="text-xs sm:text-sm text-green-400 font-bold">1: Sejarah HTML</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="flex items-center space-x-3 sm:space-x-6">
+            <div class="text-center">
+                <span class="block text-[10px] text-gray-400 uppercase">Misi Blok</span>
+                <span id="mission-status" class="pixel-font text-xs sm:text-sm text-yellow-400">0 / 3</span>
+            </div>
+            <div class="text-center">
+                <span class="block text-[10px] text-gray-400 uppercase">Skor</span>
+                <span id="score-display" class="pixel-font text-xs sm:text-sm text-white">0000</span>
+            </div>
+            <div class="text-center">
+                <span class="block text-[10px] text-gray-400 uppercase">Nyawa</span>
+                <span id="lives-display" class="pixel-font text-xs sm:text-sm text-red-500">❤️❤️❤️</span>
+            </div>
+            <button id="btn-fullscreen" onclick="toggleFullscreen()" class="bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-gray-950 font-bold px-3 py-1.5 rounded text-xs transition flex items-center gap-1 shadow">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                <span class="hidden md:inline">Layar Penuh</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Canvas Container -->
+    <main id="game-container" class="relative flex-1 w-full flex justify-center items-center bg-sky-900 overflow-hidden">
+        <canvas id="gameCanvas" class="shadow-2xl border-2 border-gray-800"></canvas>
+
+        <!-- Overlay Menu Start / Restart -->
+        <div id="start-overlay" class="absolute inset-0 bg-gray-950/90 backdrop-blur-md flex flex-col justify-center items-center text-center p-6 z-20">
+            <h1 class="pixel-font text-2xl sm:text-4xl text-yellow-400 mb-4 tracking-wide leading-relaxed">HTML QUEST</h1>
+            <p class="text-gray-300 max-w-lg mb-6 text-sm sm:text-base leading-relaxed">
+                Bantu Mario menguasai dasar-dasar HTML! Lompat dan sundul <span class="text-yellow-400 font-bold">Blok Tanda Tanya (?)</span> untuk membuka materi & kuis. Selesaikan semua misi agar <span class="text-green-400 font-bold">Pipa Pintu Keluar</span> terbuka!
+            </p>
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 text-left max-w-md w-full mb-6 space-y-2 text-xs sm:text-sm text-gray-300">
+                <div class="font-bold text-yellow-400 text-center mb-1">🎮 Kontrol Game:</div>
+                <div class="flex justify-between"><span>Jalan Kiri / Kanan:</span> <span class="text-white font-mono bg-gray-800 px-2 py-0.5 rounded">A / D</span> atau <span class="text-white font-mono bg-gray-800 px-2 py-0.5 rounded">← / →</span></div>
+                <div class="flex justify-between"><span>Melompat:</span> <span class="text-white font-mono bg-gray-800 px-2 py-0.5 rounded">W</span> / <span class="text-white font-mono bg-gray-800 px-2 py-0.5 rounded">Spasi</span> / <span class="text-white font-mono bg-gray-800 px-2 py-0.5 rounded">↑</span></div>
+                <div class="flex justify-between"><span>Layar Sentuh Mobile:</span> <span class="text-white">Gunakan Tombol di Layar</span></div>
+            </div>
+            <button onclick="startGame()" class="pixel-font bg-green-500 hover:bg-green-600 text-gray-950 font-bold py-3 px-8 rounded-lg text-sm sm:text-base transition transform hover:scale-105 active:scale-95 shadow-lg border-b-4 border-green-700">
+                MULAI PETUALANGAN
+            </button>
+        </div>
+
+        <!-- Educational Material & Quiz Modal Pop-up -->
+        <div id="material-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-30 p-4">
+            <div class="bg-gray-900 border-4 border-yellow-500 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                    <span id="modal-tag" class="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Materi HTML</span>
+                    <span id="modal-level-badge" class="text-xs text-gray-400">Level 1 - Modul 1</span>
+                </div>
+                
+                <!-- Content Scroll Area -->
+                <div class="overflow-y-auto custom-scroll pr-2 flex-1 space-y-4">
+                    <h2 id="modal-title" class="text-xl font-bold text-yellow-300">Judul Materi</h2>
+                    <div id="modal-body" class="text-gray-300 text-sm leading-relaxed space-y-3">
+                        <!-- Dynamic Content Here -->
+                    </div>
+
+                    <!-- Interactive Quiz Area -->
+                    <div id="quiz-container" class="mt-6 bg-gray-800/80 p-4 rounded-xl border border-gray-700">
+                        <p class="font-bold text-yellow-400 text-sm mb-3" id="quiz-question">Pertanyaan Kuis...</p>
+                        <div id="quiz-options" class="space-y-2">
+                            <!-- Options injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-3 border-t border-gray-800 flex justify-end">
+                    <p id="quiz-feedback" class="text-xs text-gray-400 self-center mr-auto font-medium"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Complete Modal -->
+        <div id="level-complete-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md flex flex-col justify-center items-center text-center p-6 z-30">
+            <div class="text-5xl mb-3">🎉</div>
+            <h2 class="pixel-font text-2xl text-yellow-400 mb-2">LEVEL SELESAI!</h2>
+            <p id="complete-msg" class="text-gray-200 text-sm max-w-md mb-6">Selamat! Kamu berhasil menguasai materi level ini.</p>
+            <button id="btn-next-level" onclick="nextLevel()" class="pixel-font bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold py-3 px-6 rounded-lg text-sm transition transform hover:scale-105 active:scale-95 shadow-lg border-b-4 border-yellow-700">
+                LANJUT KE LEVEL BERIKUTNYA ▶
+            </button>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="game-over-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col justify-center items-center text-center p-6 z-30">
+            <div class="text-5xl mb-3">💀</div>
+            <h2 class="pixel-font text-2xl text-red-500 mb-2">GAME OVER</h2>
+            <p class="text-gray-400 text-sm max-w-md mb-6">Jangan menyerah! Pelajari kembali materi HTML dan coba lagi.</p>
+            <button onclick="restartCurrentLevel()" class="pixel-font bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg text-sm transition transform hover:scale-105 active:scale-95 shadow-lg border-b-4 border-red-700">
+                COBA LAGI 🔄
+            </button>
+        </div>
+    </main>
+
+    <!-- Mobile Touch Controls Footer (Visible on Mobile/Tablet) -->
+    <footer class="w-full bg-gray-900 border-t-2 border-gray-800 p-3 md:hidden flex justify-between items-center z-10 select-none">
+        <!-- D-Pad Controls -->
+        <div class="flex gap-2">
+            <button id="btn-left" class="w-14 h-14 bg-gray-800 active:bg-yellow-500 border-2 border-gray-600 rounded-xl flex justify-center items-center text-2xl text-white font-bold shadow active:scale-95">
+                ◀
+            </button>
+            <button id="btn-right" class="w-14 h-14 bg-gray-800 active:bg-yellow-500 border-2 border-gray-600 rounded-xl flex justify-center items-center text-2xl text-white font-bold shadow active:scale-95">
+                ▶
+            </button>
+        </div>
+
+        <!-- Jump Action Button -->
+        <div>
+            <button id="btn-jump" class="w-16 h-16 bg-red-600 active:bg-red-500 border-2 border-red-400 rounded-full flex justify-center items-center text-xs font-bold text-white shadow-lg active:scale-95 tracking-wide pixel-font">
+                JUMP
+            </button>
+        </div>
+    </footer>
+
+    <!-- Game Logic & Curriculum Script -->
+    <script>
+        // ==========================================
+        // 1. DATA KURIKULUM & MATERI PEMBELAJARAN
+        // ==========================================
+        const LEVELS_DATA = [
+            {
+                id: 1,
+                title: "1: Sejarah HTML",
+                difficulty: "Mudah",
+                bgGradient: ["#0284c7", "#38bdf8"],
+                misionesRequired: 3,
+                modules: [
+                    {
+                        id: "l1_m1",
+                        title: "Penemu & Awal Lahirnya HTML",
+                        body: "<p><b>HTML (HyperText Markup Language)</b> pertama kali diciptakan oleh <b>Tim Berners-Lee</b> pada tahun <b>1991</b> saat ia bekerja di CERN (Lembaga Penelitian Nuklir Eropa).</p><p>Tujuan awal diciptakannya HTML adalah untuk memudahkan para peneliti membagikan dokumen dan artikel ilmiah antar komputer melalui jaringan internet.</p>",
+                        quiz: {
+                            question: "Siapakah tokoh penemu HTML pertama kali?",
+                            options: [
+                                "Bill Gates",
+                                "Tim Berners-Lee",
+                                "Steve Jobs",
+                                "Mark Zuckerberg"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l1_m2",
+                        title: "Evolusi HTML (HTML1 hingga HTML4)",
+                        body: "<p>Seiring pesatnya perkembangan internet, HTML mengalami beberapa versi:</p><ul class='list-disc pl-5 space-y-1'><li><b>HTML 1.0 (1993):</b> Versi sangat awal, hanya mendukung teks sederhana & hyperlink.</li><li><b>HTML 2.0 (1995):</b> Mulai mendukung form interaktif dan gambar.</li><li><b>HTML 4.01 (1999):</b> Menjadi standar web dunia selama bertahun-tahun dengan pemisahan gaya CSS.</li></ul>",
+                        quiz: {
+                            question: "Kemampuan utama yang mulai didukung pada HTML 2.0 adalah...",
+                            options: [
+                                "Video 4K dan Game 3D",
+                                "Formulir interaktif dan dukungan Gambar",
+                                "Desain Responsif Ponsel",
+                                "Kecerdasan Buatan (AI)"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l1_m3",
+                        title: "Era Modern: HTML5",
+                        body: "<p>Dipublikasikan secara resmi oleh W3C pada tahun <b>2014</b>, <b>HTML5</b> membawa revolusi besar di dunia web!</p><p>HTML5 mendukung pemutar video/audio native tanpa plugin, elemen semantik baru (&lt;header&gt;, &lt;footer&gt;, &lt;article&gt;), serta teknologi Grafis Canvas 2D/3D yang digunakan pada game ini!</p>",
+                        quiz: {
+                            question: "Apa keunggulan utama dari standar HTML5 modern?",
+                            options: [
+                                "Harus membayar lisensi bulanan",
+                                "Dukungan multimedia (video/audio) native & elemen semantik",
+                                "Hanya bisa dibuka di komputer lama",
+                                "Menghilangkan penggunaan gambar"
+                            ],
+                            answer: 1
+                        }
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "2: Cara Kerja HTML",
+                difficulty: "Sedang",
+                bgGradient: ["#0d9488", "#2dd4bf"],
+                misionesRequired: 3,
+                modules: [
+                    {
+                        id: "l2_m1",
+                        title: "Konsep Client - Server",
+                        body: "<p>Saat kamu mengetikkan alamat website (seperti <i>google.com</i>) di browser:</p><ol class='list-decimal pl-5 space-y-1'><li>Browser kamu (<b>Client</b>) mengirimkan <i>HTTP Request</i> ke komputer penyimpanan (<b>Server</b>).</li><li>Server merespons dengan mengirimkan file dokumen <b>HTML</b>.</li></ol>",
+                        quiz: {
+                            question: "Apa peran Browser dalam arsitektur Client-Server?",
+                            options: [
+                                "Menyimpan seluruh database website dunia",
+                                "Bertindak sebagai Client yang meminta dan menampilkan kode HTML",
+                                "Membuat kabel jaringan internet fisik",
+                                "Mematikan server saat tidak digunakan"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l2_m2",
+                        title: "Proses Rendering Browser Engine",
+                        body: "<p>Kode HTML yang diterima dari server berbentuk kumpulan karakter teks. <b>Browser Rendering Engine</b> (seperti Blink atau WebKit) membaca kode tersebut baris demi baris dari atas ke bawah untuk menyusun tata letak visual halaman.</p>",
+                        quiz: {
+                            question: "Bagaimana cara Browser membaca dokumen kode HTML?",
+                            options: [
+                                "Dari bawah ke atas secara acak",
+                                "Secara berurutan dari baris atas ke bawah (Top-to-Bottom)",
+                                "Hanya membaca baris paling tengah",
+                                "Menunggu diketik ulang oleh pengguna"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l2_m3",
+                        title: "Memahami DOM (Document Object Model)",
+                        body: "<p>Saat HTML dibaca, browser mengubah tag-tag HTML menjadi struktur pohon hirarki yang disebut <b>DOM (Document Object Model)</b>.</p><p>Dengan DOM, bahasa pemrograman seperti JavaScript dapat mengubah isi, struktur, atau gaya web secara dinamis!</p>",
+                        quiz: {
+                            question: "Apa kepanjangan dari istilah DOM dalam pemrosesan web?",
+                            options: [
+                                "Data Object Mode",
+                                "Document Object Model",
+                                "Digital Optical Media",
+                                "Direct Online Method"
+                            ],
+                            answer: 1
+                        }
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "3: Tag HTML Utama",
+                difficulty: "Sulit",
+                bgGradient: ["#4f46e5", "#818cf8"],
+                misionesRequired: 3,
+                modules: [
+                    {
+                        id: "l3_m1",
+                        title: "Struktur Dasar Tag & Heading",
+                        body: "<p>Tag HTML ditulis dalam kurung sudut seperti <code>&lt;tagname&gt;Isi&lt;/tagname&gt;</code>.</p><p>Struktur wajib: <code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, dan <code>&lt;body&gt;</code>.</p><p>Untuk judul artikel digunakan tag Heading <code>&lt;h1&gt;</code> (paling besar) sampai <code>&lt;h6&gt;</code> (paling kecil).</p>",
+                        quiz: {
+                            question: "Tag Heading manakah yang memiliki ukuran hirarki teks terbesar?",
+                            options: [
+                                "<h6>",
+                                "<h1>",
+                                "<header>",
+                                "<head>"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l3_m2",
+                        title: "Paragraf, Tautan, dan Gambar",
+                        body: "<p>Tag penting untuk konten:</p><ul class='list-disc pl-5 space-y-1'><li><code>&lt;p&gt;</code>: Membuat paragraf teks.</li><li><code>&lt;a&gt;</code>: Membuat Link / Tautan Hyperlink.</li><li><code>&lt;img&gt;</code>: Menampilkan Gambar (Self-closing tag).</li></ul>",
+                        quiz: {
+                            question: "Tag HTML yang digunakan khusus untuk membuat Link/Hyperlink adalah...",
+                            options: [
+                                "<link>",
+                                "<a>",
+                                "<href>",
+                                "<p>"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l3_m3",
+                        title: "Kontainer (Div, Span) & Daftar (List)",
+                        body: "<p>Elemen pengelompokan:</p><ul class='list-disc pl-5 space-y-1'><li><code>&lt;div&gt;</code>: Kontainer blok untuk membungkus elemen besar.</li><li><code>&lt;span&gt;</code>: Kontainer inline untuk membungkus kata/teks kecil.</li><li><code>&lt;ul&gt;</code> & <code>&lt;ol&gt;</code>: Membuat daftar berbutir (unordered) atau bernomor (ordered) bersama tag <code>&lt;li&gt;</code>.</li></ul>",
+                        quiz: {
+                            question: "Tag yang digunakan untuk membuat daftar bernomor urut (1, 2, 3) adalah...",
+                            options: [
+                                "<ul>",
+                                "<ol>",
+                                "<li>",
+                                "<list>"
+                            ],
+                            answer: 1
+                        }
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "4: Atribut HTML",
+                difficulty: "Sangat Sulit",
+                bgGradient: ["#c026d3", "#e879f9"],
+                misionesRequired: 3,
+                modules: [
+                    {
+                        id: "l4_m1",
+                        title: "Atribut Href, Src, dan Alt",
+                        body: "<p>Atribut memberikan informasi tambahan pada elemen HTML:</p><ul class='list-disc pl-5 space-y-1'><li><code>href</code>: Menentukan tujuan URL pada tag <code>&lt;a&gt;</code>.</li><li><code>src</code>: Menentukan sumber file gambar pada tag <code>&lt;img&gt;</code>.</li><li><code>alt</code>: Teks alternatif jika gambar gagal dimuat.</li></ul>",
+                        quiz: {
+                            question: "Atribut yang digunakan pada tag <img> untuk menentukan lokasi file gambar adalah...",
+                            options: [
+                                "href",
+                                "src",
+                                "alt",
+                                "link"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l4_m2",
+                        title: "Atribut Identifikasi: Class & ID",
+                        body: "<p>Digunakan untuk target penataan CSS dan manipulasi JavaScript:</p><ul class='list-disc pl-5 space-y-1'><li><code>id</code>: Identitas **UNIK** (hanya boleh 1 nama ID per halaman).</li><li><code>class</code>: Identitas grup yang dapat dipakai **BERULANG** pada banyak elemen.</li></ul>",
+                        quiz: {
+                            question: "Atribut identifikasi yang sifatnya unik dan hanya boleh digunakan satu kali per halaman adalah...",
+                            options: [
+                                "class",
+                                "id",
+                                "group",
+                                "style"
+                            ],
+                            answer: 1
+                        }
+                    },
+                    {
+                        id: "l4_m3",
+                        title: "Atribut Form & Interaksi (Style, Target, Disabled)",
+                        body: "<p>Atribut tambahan serbaguna:</p><ul class='list-disc pl-5 space-y-1'><li><code>target='_blank'</code>: Membuka link di tab baru.</li><li><code>style</code>: Menambahkan CSS langsung (inline style).</li><li><code>disabled</code>: Mematikan elemen tombol/input agar tidak bisa diklik.</li></ul>",
+                        quiz: {
+                            question: "Nilai atribut target manakah yang berfungsi membuka tautan di TAB BARU browser?",
+                            options: [
+                                "_self",
+                                "_blank",
+                                "_parent",
+                                "_top"
+                            ],
+                            answer: 1
+                        }
+                    }
+                ]
+            }
+        ];
+
+        // ==========================================
+        // 2. GAME ENGINE & STATE MANAGEMENT
+        // ==========================================
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Canvas Responsive Dynamic Resizing
+        const CANVAS_WIDTH = 960;
+        const CANVAS_HEIGHT = 540;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        function fitCanvasToScreen() {
+            const container = document.getElementById("game-container");
+            const aspect = CANVAS_WIDTH / CANVAS_HEIGHT;
+            let w = container.clientWidth;
+            let h = container.clientHeight;
+
+            if (w / h > aspect) {
+                w = h * aspect;
+            } else {
+                h = w / aspect;
+            }
+
+            canvas.style.width = `${w}px`;
+            canvas.style.height = `${h}px`;
+        }
+        window.addEventListener("resize", fitCanvasToScreen);
+        fitCanvasToScreen();
+
+        // Game State Variables
+        let currentLevelIdx = 0;
+        let score = 0;
+        let lives = 3;
+        let gameActive = false;
+        let gamePaused = false;
+        let cameraX = 0;
+        let activeModule = null;
+        let activeBlock = null;
+
+        // Player Keys State
+        const keys = {
+            left: false,
+            right: false,
+            jump: false
+        };
+
+        // Player Entity (Mario Style)
+        const player = {
+            x: 80,
+            y: 350,
+            width: 32,
+            height: 44,
+            vx: 0,
+            vy: 0,
+            speed: 5.5,
+            jumpPower: -13.5,
+            gravity: 0.65,
+            grounded: false,
+            facing: 'right',
+            animFrame: 0,
+            animTimer: 0
+        };
+
+        // Level Level Map Objects
+        let platforms = [];
+        let blocks = [];
+        let enemies = [];
+        let pipe = null;
+
+        // Sound Synthesis Effects (Web Audio API - No External Files)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, duration) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        function soundJump() { playTone(400, 'square', 0.15); }
+        function soundHitBlock() { playTone(600, 'triangle', 0.2); }
+        function soundSuccess() { 
+            playTone(523, 'sine', 0.1); 
+            setTimeout(() => playTone(659, 'sine', 0.1), 100);
+            setTimeout(() => playTone(783, 'sine', 0.2), 200);
+        }
+        function soundHurt() { playTone(150, 'sawtooth', 0.3); }
+
+        // ==========================================
+        // 3. LEVEL BUILDER / GENERATOR
+        // ==========================================
+        function initLevel(levelIdx) {
+            const data = LEVELS_DATA[levelIdx];
+            document.getElementById("level-title").innerText = data.title;
+            updateUI();
+
+            // Reset Player
+            player.x = 80;
+            player.y = 350;
+            player.vx = 0;
+            player.vy = 0;
+            cameraX = 0;
+
+            // Generate Level Layout
+            platforms = [
+                // Ground segments
+                { x: 0, y: 460, width: 900, height: 80 },
+                { x: 980, y: 460, width: 800, height: 80 },
+                { x: 1840, y: 460, width: 1000, height: 80 },
+
+                // Elevated Platforms
+                { x: 300, y: 340, width: 160, height: 24 },
+                { x: 650, y: 270, width: 180, height: 24 },
+                { x: 1150, y: 330, width: 200, height: 24 },
+                { x: 1500, y: 250, width: 160, height: 24 },
+                { x: 2050, y: 340, width: 220, height: 24 }
+            ];
+
+            // Floating Question Blocks (?) containing HTML Missions
+            blocks = [
+                { x: 360, y: 220, width: 40, height: 40, module: data.modules[0], solved: false, bounceY: 0 },
+                { x: 1220, y: 200, width: 40, height: 40, module: data.modules[1], solved: false, bounceY: 0 },
+                { x: 2120, y: 210, width: 40, height: 40, module: data.modules[2], solved: false, bounceY: 0 }
+            ];
+
+            // Patrol Goomba-like Enemies
+            enemies = [
+                { x: 500, y: 420, width: 36, height: 36, vx: -1.5, minX: 350, maxX: 800, alive: true },
+                { x: 1300, y: 420, width: 36, height: 36, vx: 1.8, minX: 1000, maxX: 1600, alive: true },
+                { x: 2000, y: 420, width: 36, height: 36, vx: -2.0, minX: 1880, maxX: 2300, alive: true }
+            ];
+
+            // Level Exit Pipe / Gate
+            pipe = {
+                x: 2600,
+                y: 340,
+                width: 70,
+                height: 120,
+                locked: true
+            };
+        }
+
+        // ==========================================
+        // 4. INPUT LISTENERS (KEYBOARD & TOUCH)
+        // ==========================================
+        window.addEventListener("keydown", (e) => {
+            if (!gameActive || gamePaused) return;
+            if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
+            if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
+            if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
+                keys.jump = true;
+                e.preventDefault();
+            }
+        });
+
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
+            if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
+            if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") keys.jump = false;
+        });
+
+        // Touch Button Handlers
+        function setupTouchButton(id, keyName) {
+            const btn = document.getElementById(id);
+            btn.addEventListener("touchstart", (e) => { e.preventDefault(); keys[keyName] = true; });
+            btn.addEventListener("touchend", (e) => { e.preventDefault(); keys[keyName] = false; });
+            btn.addEventListener("mousedown", () => { keys[keyName] = true; });
+            btn.addEventListener("mouseup", () => { keys[keyName] = false; });
+        }
+        setupTouchButton("btn-left", "left");
+        setupTouchButton("btn-right", "right");
+        setupTouchButton("btn-jump", "jump");
+
+        // Fullscreen Toggle Helper
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        // ==========================================
+        // 5. UPDATE & PHYSICS ENGINE
+        // ==========================================
+        function update() {
+            if (!gameActive || gamePaused || !pipe) return;
+
+            // Player Horizontal Movement
+            if (keys.left) {
+                player.vx = -player.speed;
+                player.facing = 'left';
+            } else if (keys.right) {
+                player.vx = player.speed;
+                player.facing = 'right';
+            } else {
+                player.vx *= 0.8; // Friction
+            }
+
+            // Player Jumping
+            if (keys.jump && player.grounded) {
+                player.vy = player.jumpPower;
+                player.grounded = false;
+                soundJump();
+            }
+
+            // Apply Gravity
+            player.vy += player.gravity;
+
+            // Move Player Horizontal & Collision
+            player.x += player.vx;
+            checkHorizontalCollisions();
+
+            // Move Player Vertical & Collision
+            player.y += player.vy;
+            player.grounded = false;
+            checkVerticalCollisions();
+
+            // Pit Fall Check (Game Over condition)
+            if (player.y > CANVAS_HEIGHT + 100) {
+                takeDamage(true);
+            }
+
+            // Block Head Bump Collision Check (Hit from below)
+            blocks.forEach(b => {
+                if (b.bounceY < 0) b.bounceY += 1; // Bounce animation reset
+                
+                if (
+                    player.vy < 0 &&
+                    player.x + player.width > b.x &&
+                    player.x < b.x + b.width &&
+                    player.y <= b.y + b.height &&
+                    player.y >= b.y + b.height - 12
+                ) {
+                    player.vy = 2; // Bounce player down
+                    b.bounceY = -8;
+                    soundHitBlock();
+                    
+                    if (!b.solved) {
+                        openMaterialModal(b.module, b);
+                    }
+                }
+            });
+
+            // Update Enemy Movement & Collisions
+            enemies.forEach(e => {
+                if (!e.alive) return;
+                e.x += e.vx;
+                if (e.x <= e.minX || e.x + e.width >= e.maxX) {
+                    e.vx *= -1; // Reverse direction
+                }
+
+                // Collision with player
+                if (
+                    player.x + player.width > e.x &&
+                    player.x < e.x + e.width &&
+                    player.y + player.height > e.y &&
+                    player.y < e.y + e.height
+                ) {
+                    // Stomp enemy from top
+                    if (player.vy > 0 && player.y + player.height - player.vy <= e.y + 12) {
+                        e.alive = false;
+                        player.vy = -8;
+                        score += 150;
+                        soundHitBlock();
+                        updateUI();
+                    } else {
+                        // Hurt Player
+                        takeDamage(false);
+                    }
+                }
+            });
+
+            // Pipe Gate Exit Check
+            const solvedCount = blocks.filter(b => b.solved).length;
+            pipe.locked = solvedCount < LEVELS_DATA[currentLevelIdx].misionesRequired;
+
+            if (
+                player.x + player.width > pipe.x &&
+                player.x < pipe.x + pipe.width &&
+                player.y + player.height > pipe.y
+            ) {
+                if (!pipe.locked) {
+                    levelCleared();
+                }
+            }
+
+            // Smooth Camera Follow
+            const targetCamX = player.x - CANVAS_WIDTH / 3;
+            cameraX += (targetCamX - cameraX) * 0.1;
+            if (cameraX < 0) cameraX = 0;
+        }
+
+        function checkHorizontalCollisions() {
+            platforms.forEach(p => {
+                if (
+                    player.x < p.x + p.width &&
+                    player.x + player.width > p.x &&
+                    player.y < p.y + p.height &&
+                    player.y + player.height > p.y
+                ) {
+                    if (player.vx > 0) player.x = p.x - player.width;
+                    else if (player.vx < 0) player.x = p.x + p.width;
+                }
+            });
+        }
+
+        function checkVerticalCollisions() {
+            platforms.forEach(p => {
+                if (
+                    player.x < p.x + p.width &&
+                    player.x + player.width > p.x &&
+                    player.y < p.y + p.height &&
+                    player.y + player.height > p.y
+                ) {
+                    if (player.vy > 0) { // Falling down onto platform
+                        player.y = p.y - player.height;
+                        player.vy = 0;
+                        player.grounded = true;
+                    } else if (player.vy < 0) { // Hitting ceiling
+                        player.y = p.y + p.height;
+                        player.vy = 0;
+                    }
+                }
+            });
+        }
+
+        function takeDamage(instantKill) {
+            soundHurt();
+            if (instantKill) lives = 0;
+            else lives--;
+
+            updateUI();
+
+            if (lives <= 0) {
+                gameActive = false;
+                document.getElementById("game-over-modal").classList.remove("hidden");
+            } else {
+                // Respawn at start of level
+                player.x = 80;
+                player.y = 350;
+                player.vx = 0;
+                player.vy = 0;
+            }
+        }
+
+        function updateUI() {
+            document.getElementById("score-display").innerText = String(score).padStart(4, '0');
+            document.getElementById("lives-display").innerText = '❤️'.repeat(Math.max(0, lives));
+            
+            const solvedCount = blocks ? blocks.filter(b => b.solved).length : 0;
+            const totalCount = LEVELS_DATA[currentLevelIdx].misionesRequired;
+            document.getElementById("mission-status").innerText = `${solvedCount} / ${totalCount}`;
+        }
+
+        // ==========================================
+        // 6. RENDER & GRAPHICS DRAWING
+        // ==========================================
+        function render() {
+            // Draw Background Sky Gradient
+            const currentData = LEVELS_DATA[currentLevelIdx];
+            const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+            grad.addColorStop(0, currentData.bgGradient[0]);
+            grad.addColorStop(1, currentData.bgGradient[1]);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            if (!pipe) return;
+
+            ctx.save();
+            ctx.translate(-Math.floor(cameraX), 0);
+
+            // Draw Parallax Background Hills/Clouds
+            drawBackgroundElements();
+
+            // Draw Platforms & Ground
+            platforms.forEach(p => {
+                // Dirt Base
+                ctx.fillStyle = "#854d0e";
+                ctx.fillRect(p.x, p.y, p.width, p.height);
+                // Top Grass Layer
+                ctx.fillStyle = "#22c55e";
+                ctx.fillRect(p.x, p.y, p.width, 12);
+                ctx.fillStyle = "#15803d";
+                ctx.fillRect(p.x, p.y + 12, p.width, 4);
+            });
+
+            // Draw Floating Question Blocks (?)
+            blocks.forEach(b => {
+                const drawY = b.y + b.bounceY;
+                ctx.fillStyle = b.solved ? "#9ca3af" : "#f59e0b";
+                ctx.fillRect(b.x, drawY, b.width, b.height);
+
+                // Block Border Details
+                ctx.strokeStyle = "#78350f";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(b.x, drawY, b.width, b.height);
+
+                // Draw Text / Icon inside block
+                ctx.fillStyle = b.solved ? "#4b5563" : "#ffffff";
+                ctx.font = "bold 20px 'Press Start 2P', monospace";
+                ctx.textAlign = "center";
+                ctx.fillText(b.solved ? "✓" : "?", b.x + b.width / 2, drawY + 28);
+            });
+
+            // Draw Exit Pipe Gate
+            const solvedAll = blocks.every(b => b.solved);
+            ctx.fillStyle = solvedAll ? "#16a34a" : "#4b5563"; // Green when unlocked, Dark Gray when locked
+            ctx.fillRect(pipe.x, pipe.y, pipe.width, pipe.height);
+            // Pipe Rim
+            ctx.fillStyle = solvedAll ? "#22c55e" : "#6b7280";
+            ctx.fillRect(pipe.x - 6, pipe.y, pipe.width + 12, 24);
+            ctx.strokeStyle = "#14532d";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(pipe.x - 6, pipe.y, pipe.width + 12, 24);
+
+            // Lock Indicator on Pipe
+            if (!solvedAll) {
+                ctx.fillStyle = "#ef4444";
+                ctx.font = "18px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("🔒 TERKUNCI", pipe.x + pipe.width / 2, pipe.y - 15);
+            } else {
+                ctx.fillStyle = "#facc15";
+                ctx.font = "bold 14px 'Press Start 2P'";
+                ctx.textAlign = "center";
+                ctx.fillText("EXIT ▶", pipe.x + pipe.width / 2, pipe.y - 15);
+            }
+
+            // Draw Enemies
+            enemies.forEach(e => {
+                if (!e.alive) return;
+                ctx.fillStyle = "#b91c1c"; // Red Goomba style body
+                ctx.beginPath();
+                ctx.arc(e.x + e.width / 2, e.y + e.height / 2, e.width / 2, Math.PI, 0, false);
+                ctx.fill();
+                ctx.fillRect(e.x, e.y + e.height / 2, e.width, e.height / 2);
+
+                // Eyes
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(e.x + 6, e.y + 10, 6, 8);
+                ctx.fillRect(e.x + 22, e.y + 10, 6, 8);
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(e.x + 8, e.y + 12, 3, 4);
+                ctx.fillRect(e.x + 24, e.y + 12, 3, 4);
+            });
+
+            // Draw Player (Mario Character)
+            ctx.fillStyle = "#ef4444"; // Red shirt / hat
+            ctx.fillRect(player.x + 4, player.y, player.width - 8, 12); // Hat
+            ctx.fillStyle = "#fde047"; // Face/Skin
+            ctx.fillRect(player.x + 4, player.y + 12, player.width - 8, 12);
+            ctx.fillStyle = "#1d4ed8"; // Blue Overalls
+            ctx.fillRect(player.x + 2, player.y + 24, player.width - 4, 20);
+
+            // Eyes & Mustache orientation
+            ctx.fillStyle = "#000";
+            if (player.facing === 'right') {
+                ctx.fillRect(player.x + 20, player.y + 14, 4, 4); // Eye
+                ctx.fillRect(player.x + 16, player.y + 20, 10, 4); // Mustache
+            } else {
+                ctx.fillRect(player.x + 8, player.y + 14, 4, 4); // Eye
+                ctx.fillRect(player.x + 6, player.y + 20, 10, 4); // Mustache
+            }
+
+            ctx.restore();
+        }
+
+        function drawBackgroundElements() {
+            // Decorative Clouds
+            ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+            ctx.beginPath();
+            ctx.arc(200, 100, 30, 0, Math.PI * 2);
+            ctx.arc(240, 90, 40, 0, Math.PI * 2);
+            ctx.arc(280, 100, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(1100, 120, 35, 0, Math.PI * 2);
+            ctx.arc(1140, 110, 45, 0, Math.PI * 2);
+            ctx.arc(1185, 120, 35, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Distant Hills
+            ctx.fillStyle = "rgba(16, 185, 129, 0.3)";
+            ctx.beginPath();
+            ctx.arc(500, 460, 180, Math.PI, 0);
+            ctx.arc(1700, 460, 220, Math.PI, 0);
+            ctx.fill();
+        }
+
+        // Main Animation Loop
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ==========================================
+        // 7. MODAL INTERACTION & QUIZ LOGIC
+        // ==========================================
+        function openMaterialModal(moduleData, blockObj) {
+            gamePaused = true;
+            activeModule = moduleData;
+            activeBlock = blockObj;
+
+            document.getElementById("modal-level-badge").innerText = `Level ${currentLevelIdx + 1} - Modul Kuis`;
+            document.getElementById("modal-title").innerText = moduleData.title;
+            document.getElementById("modal-body").innerHTML = moduleData.body;
+
+            // Setup Quiz
+            const quiz = moduleData.quiz;
+            document.getElementById("quiz-question").innerText = "❓ Pertanyaan: " + quiz.question;
+            document.getElementById("quiz-feedback").innerText = "";
+
+            const optsContainer = document.getElementById("quiz-options");
+            optsContainer.innerHTML = "";
+
+            quiz.options.forEach((optText, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left p-3 rounded-lg bg-gray-700 hover:bg-yellow-600 hover:text-gray-950 font-medium text-xs sm:text-sm transition flex items-center gap-2 border border-gray-600";
+                btn.innerHTML = `<span class="bg-gray-900 text-yellow-400 w-6 h-6 rounded-full flex justify-center items-center text-xs font-bold">${String.fromCharCode(65 + idx)}</span> ${optText}`;
+                btn.onclick = () => checkAnswer(idx);
+                optsContainer.appendChild(btn);
+            });
+
+            document.getElementById("material-modal").classList.remove("hidden");
+        }
+
+        function checkAnswer(selectedIndex) {
+            const quiz = activeModule.quiz;
+            const feedbackEl = document.getElementById("quiz-feedback");
+
+            if (selectedIndex === quiz.answer) {
+                soundSuccess();
+                feedbackEl.className = "text-xs font-bold text-green-400";
+                feedbackEl.innerText = "✓ JAWABAN BENAR! MISI SELESAI.";
+                
+                activeBlock.solved = true;
+                score += 300;
+                updateUI();
+
+                setTimeout(() => {
+                    closeMaterialModal();
+                }, 1200);
+            } else {
+                soundHurt();
+                feedbackEl.className = "text-xs font-bold text-red-400";
+                feedbackEl.innerText = "❌ JAWABAN SALAH! BACA KEMBALI MATERI DI ATAS.";
+            }
+        }
+
+        function closeMaterialModal() {
+            document.getElementById("material-modal").classList.add("hidden");
+            gamePaused = false;
+        }
+
+        function levelCleared() {
+            gameActive = false;
+            soundSuccess();
+
+            if (currentLevelIdx < LEVELS_DATA.length - 1) {
+                document.getElementById("complete-msg").innerText = `Selamat! Kamu telah menyelesaikan Level ${currentLevelIdx + 1}. Siap untuk tantangan berikutnya?`;
+                document.getElementById("btn-next-level").innerText = "LANJUT KE LEVEL BERIKUTNYA ▶";
+            } else {
+                document.getElementById("complete-msg").innerText = "🏆 SELAMAT! Kamu telah menuntaskan SELURUH MODUL PEMBELAJARAN HTML! Kamu adalah seorang Web Master!";
+                document.getElementById("btn-next-level").innerText = "MAIN LAGI DARI AWAL 🔄";
+            }
+            document.getElementById("level-complete-modal").classList.remove("hidden");
+        }
+
+        function nextLevel() {
+            document.getElementById("level-complete-modal").classList.add("hidden");
+            if (currentLevelIdx < LEVELS_DATA.length - 1) {
+                currentLevelIdx++;
+            } else {
+                currentLevelIdx = 0;
+                score = 0;
+                lives = 3;
+            }
+            initLevel(currentLevelIdx);
+            gameActive = true;
+        }
+
+        function restartCurrentLevel() {
+            document.getElementById("game-over-modal").classList.add("hidden");
+            lives = 3;
+            initLevel(currentLevelIdx);
+            gameActive = true;
+        }
+
+        function startGame() {
+            document.getElementById("start-overlay").classList.add("hidden");
+            currentLevelIdx = 0;
+            score = 0;
+            lives = 3;
+            initLevel(currentLevelIdx);
+            gameActive = true;
+        }
+
+        // Start animation loop on window load
+        window.onload = function () {
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
